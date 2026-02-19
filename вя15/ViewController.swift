@@ -11,6 +11,7 @@ class ViewController: UIViewController {
     
     private let button = UIButton()
     private var blurEffectView: UIVisualEffectView?
+    private var customAlertView: CustomAlertView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -81,15 +82,53 @@ class ViewController: UIViewController {
         }
     }
     
-    @objc func buttonTapped() {
-        addBlurEffect()
-        let alert = UIAlertController(title: "Task completed", message: "Congrats! You've successfully completed the task.", preferredStyle: .alert)
-        let action = UIAlertAction(title: "I know",  style: .default) { [weak self] _ in
-            self?.removeBlurEffect()
+    private func showCustomAlert() {
+        customAlertView = CustomAlertView(
+            title: "Task completed",
+            message: "Congrats! You've successfully completed the task.",
+            buttonTitle: "I know"
+        )
+        
+        guard let alertView = customAlertView else { return }
+        
+        alertView.translatesAutoresizingMaskIntoConstraints = false
+        alertView.alpha = 0
+        alertView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+        
+        alertView.onButtonTap = { [weak self] in
+            self?.hideCustomAlert()
         }
         
-        alert.addAction(action)
-        present(alert, animated: true, completion: nil)
+        view.addSubview(alertView)
+        
+        NSLayoutConstraint.activate([
+            alertView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            alertView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            alertView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
+            alertView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
+            alertView.widthAnchor.constraint(equalToConstant: 300),
+            alertView.heightAnchor.constraint(equalToConstant: 180)
+        ])
+        
+        UIView.animate(withDuration: 0.3, delay: 0.1, options: .curveEaseOut) {
+            alertView.alpha = 1
+            alertView.transform = .identity
+        }
+    }
+    
+    private func hideCustomAlert() {
+        UIView.animate(withDuration: 0.2, animations: {
+            self.customAlertView?.alpha = 0
+            self.customAlertView?.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+        }) { _ in
+            self.customAlertView?.removeFromSuperview()
+            self.customAlertView = nil
+            self.removeBlurEffect()
+        }
+    }
+    
+    @objc func buttonTapped() {
+        addBlurEffect()
+        showCustomAlert()
     }
 }
-
